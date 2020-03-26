@@ -1,0 +1,28 @@
+{% extends "layout.html" %} 
+
+{% block title %} 
+
+    Quote Info 
+
+{% endblock %} 
+
+{% block main %}
+<!-- Diplaying Information of the Quote -->
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Symbol</th>
+      <th scope="col">Company Name</th>
+      <th scope="col">Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{quote["symbol"]}}</td>
+      <td>{{quote["name"]}}</td>
+      <td><strong>{{quote["price"] | usd}}</strong></td>
+    </tr>
+  </tbody>
+</table>
+{% endblock %}
+

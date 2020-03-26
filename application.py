@@ -116,7 +116,20 @@ def logout():
 @login_required
 def quote():
     """Get stock quote."""
-    return apology("TODO")
+    if request.method == "POST":
+        # Make sure a Quote is entered
+        if not request.form.get("quote"):
+            return apology("Please Enter a quote",400)
+        # Getting the Quote 
+        quote = lookup(request.form.get("quote"))
+        # checking quote availability
+        if not quote:
+            return apology("Quote not Found",403)
+        else:
+            return render_template("quoted.html",quote=quote)
+        print("quote is",quote)
+
+    return render_template("quote.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
