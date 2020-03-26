@@ -53,7 +53,31 @@ def index():
 @login_required
 def buy():
     """Buy shares of stock"""
-    return apology("TODO")
+    if request.method == "POST":
+        symbol = request.form.get("symbol")
+        quote = lookup(symbol)
+        # Checking if Quote is available
+        if not quote:
+            return apology("Quote not Found",403)
+        else:
+            shares = request.form.get("shares")
+            db = SQL("sqlite:///finance.db")
+            # Get current user cash
+            rows = db.execute("SELECT * FROM users WHERE id=?", session["user_id"])
+            cash = rows[0]["cash"]
+            print(cash)
+            amount = float(shares)*quote["price"]
+            if cash < amount:
+                return apology("NOT ENOUGH CASH",403)
+            else:
+                cash -= amount
+                # Add to transactions
+                db.execute("INSERT INTO transactions (user_id,symbol,price,shares,amount) VALUES(:user_id,:symbol,:price,:shares,:amount)",user_id=session["user_id"],symbol=quote["symbol"],price=quote["price"],shares=shares,amount=amount)
+                # update cash in users
+                db.execute("UPDATE users SET cash = :cash WHERE id=:user_id",user_id =session["user_id"],cash=cash)
+                return ("Thanks ")
+    else:
+        return render_template("buy.html")
 
 
 @app.route("/history")
