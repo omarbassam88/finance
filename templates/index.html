@@ -1,0 +1,39 @@
+{% extends "layout.html" %} 
+
+{% block title %} 
+
+    Quote Info 
+
+{% endblock %} 
+
+{% block main %}
+<!-- Diplaying Information of the Quote -->
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">stocks</th>
+      <th scope="col">shares</th>
+      <th scope="col">Current Price</th>
+      <th scope="col">Total Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for stock in stocks  %}
+    <tr>
+      <td>{{stock["symbol"]}}</td>
+      <td>{{stock["total_shares"]}}</td>
+      <td>{{quotes[stock["symbol"]] | usd}}</td>
+      <td>{{(stock["total_shares"] * quotes[stock["symbol"]]) | usd }}</td>
+    </tr>
+        
+    {% endfor %}
+    <tr>
+      <td></td>
+      <td></td>
+      <td><strong>Cash Remining</strong></td>
+      <td><strong>{{cash | usd}}</strong></td>
+    </tr>
+  </tbody>
+</table>
+{% endblock %}
+

@@ -46,7 +46,18 @@ db = SQL("sqlite:///finance.db")
 @login_required
 def index():
     """Show portfolio of stocks"""
-    return apology("TODO")
+    db = SQL("sqlite:///finance.db")
+    # Get user transactions
+    stocks = db.execute("SELECT symbol, SUM(shares) as total_shares FROM transactions WHERE user_id=? GROUP BY symbol Having total_shares>0",(session["user_id"]))
+    print(stocks)
+    # Get Current Price
+    quotes={}
+    for stock in stocks:
+        quotes[stock["symbol"]]= lookup(stock["symbol"])["price"]
+    # Get user cash
+    cash = db.execute("SELECT * FROM users WHERE id=?", session["user_id"])[0]["cash"]
+    # Go to Portfolio
+    return render_template("index.html", stocks=stocks, quotes=quotes,cash=cash)
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -75,7 +86,7 @@ def buy():
                 db.execute("INSERT INTO transactions (user_id,symbol,price,shares,amount) VALUES(:user_id,:symbol,:price,:shares,:amount)",user_id=session["user_id"],symbol=quote["symbol"],price=quote["price"],shares=shares,amount=amount)
                 # update cash in users
                 db.execute("UPDATE users SET cash = :cash WHERE id=:user_id",user_id =session["user_id"],cash=cash)
-                return ("Thanks ")
+                return redirect(url_for("index"))
     else:
         return render_template("buy.html")
 
@@ -203,7 +214,33 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    return apology("TODO")
+    if request.method == "POST":
+        # Check if user has stock
+        db = SQL("sqlite:///finance.db")
+        # Get user transactions
+        symbol=request.form.get("symbol")
+        shares=int(request.form.get("shares"))
+        stock = db.execute("SELECT SUM(shares) as total_shares FROM transactions WHERE user_id=? and symbol=? GROUP BY symbol Having total_shares>0",(session["user_id"],symbol))
+        print(stock)
+
+        if len(stock) !=1:   
+            return apology("You don't own this Quote")
+        elif shares > stock[0]["total_shares"]:
+            return apology("You don't have enough shares")
+        else:
+            current_price=lookup(symbol)["price"]
+            amount= float(shares*current_price)
+            # insert Transaction into Database
+            shares*=(-1)
+            db.execute("INSERT INTO transactions (user_id,symbol,price,shares,amount) VALUES(:user_id,:symbol,:price,:shares,:amount)",user_id=session["user_id"],symbol=symbol,price=current_price,shares=shares,amount=amount)
+            # update user cash
+            cash=db.execute("SELECT * FROM users WHERE id=?", session["user_id"])[0]["cash"]
+            cash+=amount
+            db.execute("UPDATE users SET cash = :cash WHERE id=:user_id",user_id =session["user_id"],cash=cash)
+            # Back to Portfolio
+            return redirect(url_for("index"))
+    else:
+        return render_template("sell.html")
 
 
 def errorhandler(e):
